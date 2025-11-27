@@ -1,0 +1,344 @@
+:root {
+  --jane-blue: #0052ff;
+  --jane-blue-dark: #0038b8;
+  --jane-blue-light: #4f7dff;
+  --jane-white: #ffffff;
+  --jane-gray: #c7d2ff;
+  --jane-black: #050816;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "SF Pro Text",
+    "Segoe UI", sans-serif;
+}
+
+body {
+  min-height: 100vh;
+  background: var(--jane-blue);
+  color: var(--jane-white);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+
+.app {
+  width: 100%;
+  max-width: 1080px;
+  background: linear-gradient(135deg, var(--jane-blue-dark), var(--jane-blue));
+  border: 4px solid var(--jane-blue-light);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.45);
+  padding: 24px 24px 20px;
+  position: relative;
+  overflow: hidden;
+}
+
+.pixel-corner {
+  position: absolute;
+  width: 18px;
+  height: 18px;
+  background: var(--jane-white);
+}
+.pixel-corner.tl { top: 0; left: 0; }
+.pixel-corner.tr { top: 0; right: 0; }
+.pixel-corner.bl { bottom: 0; left: 0; }
+.pixel-corner.br { bottom: 0; right: 0; }
+
+.header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.avatar {
+  width: 64px;
+  height: 64px;
+  background: var(--jane-white);
+  position: relative;
+  image-rendering: pixelated;
+}
+.avatar::before {
+  content: "";
+  position: absolute;
+  width: 8px;
+  height: 8px;
+  background: var(--jane-blue);
+  box-shadow:
+    16px 8px 0 0 var(--jane-blue),
+    24px 8px 0 0 var(--jane-blue),
+    16px 16px 0 0 var(--jane-blue),
+    24px 16px 0 0 var(--jane-blue),
+    8px 24px 0 0 var(--jane-blue),
+    16px 24px 0 0 var(--jane-blue),
+    24px 24px 0 0 var(--jane-blue),
+    32px 24px 0 0 var(--jane-blue),
+    8px 32px 0 0 var(--jane-blue),
+    24px 32px 0 0 var(--jane-blue),
+    16px 40px 0 0 var(--jane-blue),
+    24px 40px 0 0 var(--jane-blue);
+}
+
+.title-block {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.title {
+  font-size: 24px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.subtitle {
+  font-size: 13px;
+  color: var(--jane-gray);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+/* 社交链接 */
+.social {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-top: 2px;
+  font-size: 11px;
+}
+
+.social a {
+  color: var(--jane-gray);
+  text-decoration: none;
+}
+
+.social a:hover {
+  color: var(--jane-white);
+  text-decoration: underline;
+}
+
+.social .dot {
+  color: var(--jane-gray);
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
+  gap: 18px;
+}
+
+@media (max-width: 900px) {
+  .grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.panel {
+  border: 2px solid rgba(255, 255, 255, 0.35);
+  background: rgba(0, 0, 0, 0.15);
+  padding: 16px 14px 14px;
+}
+
+.panel-title {
+  font-size: 14px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  margin-bottom: 10px;
+  color: var(--jane-gray);
+}
+
+.form-row {
+  display: grid;
+  grid-template-columns: 0.9fr 1.1fr;
+  gap: 10px;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.form-row.full {
+  grid-template-columns: 1fr;
+}
+
+label {
+  font-size: 13px;
+  color: var(--jane-gray);
+}
+
+input,
+select {
+  width: 100%;
+  padding: 8px 9px;
+  border-radius: 0;
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  background: rgba(0, 0, 0, 0.3);
+  color: var(--jane-white);
+  font-size: 13px;
+  outline: none;
+}
+
+input::placeholder {
+  color: rgba(199, 210, 255, 0.7);
+}
+
+input:focus,
+select:focus {
+  border-color: var(--jane-blue-light);
+  box-shadow: 0 0 0 1px var(--jane-blue-light);
+}
+
+.hint {
+  font-size: 11px;
+  color: var(--jane-gray);
+  opacity: 0.85;
+  margin-top: -4px;
+  margin-bottom: 8px;
+}
+
+.results-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.stat {
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  padding: 10px 9px;
+  background: rgba(0, 0, 0, 0.25);
+  min-height: 56px;
+}
+
+.stat-label {
+  font-size: 11px;
+  color: var(--jane-gray);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin-bottom: 4px;
+}
+
+.stat-value {
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.stat-sub {
+  font-size: 11px;
+  color: var(--jane-gray);
+  margin-top: 2px;
+}
+
+.badge-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 8px;
+  font-size: 11px;
+}
+
+.badge {
+  padding: 3px 6px;
+  border-radius: 0;
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.badge.accent {
+  background: var(--jane-white);
+  color: var(--jane-blue-dark);
+}
+
+.footer {
+  margin-top: 12px;
+  font-size: 11px;
+  color: var(--jane-gray);
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.footer span {
+  opacity: 0.9;
+}
+
+.footer strong {
+  color: var(--jane-white);
+}
+
+.pixel-btn {
+  display: inline-block;
+  padding: 7px 10px;
+  background: var(--jane-white);
+  color: var(--jane-blue-dark);
+  border: 2px solid var(--jane-blue-light);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  cursor: pointer;
+}
+
+.pixel-btn:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+/* 大字收益块 */
+.mega-block {
+  margin-top: 14px;
+  padding: 12px 10px;
+  border: 2px solid var(--jane-white);
+  background: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.14),
+    rgba(0, 0, 0, 0.3)
+  );
+  text-align: left;
+}
+
+.mega-title {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--jane-gray);
+  margin-bottom: 4px;
+}
+
+.mega-main {
+  font-size: 26px;
+  font-weight: 800;
+  line-height: 1.1;
+}
+
+.mega-main span {
+  font-size: 22px;
+  font-weight: 700;
+  margin-left: 4px;
+}
+
+.mega-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 6px;
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.mega-tag {
+  padding: 4px 8px;
+  border-radius: 0;
+  border: 1px dashed rgba(255, 255, 255, 0.7);
+  background: rgba(0, 0, 0, 0.35);
+}
+
+.mega-sub {
+  margin-top: 6px;
+  font-size: 11px;
+  color: var(--jane-gray);
+}
