@@ -1,16 +1,10 @@
-// JANE Yield Calculator – MengLayer Edition
-// 使用 Pendle API 推导 USD3 YT 价格，YT 名义本金 = 本金 / YT价格，YT ROI = (JANE - 本金) / 本金
+// JANE Yield Calculator – MengLayer Simplified
+// per-dollar 固定：USD3=0.01, LP=0.014, YT=0.01
+// YT：名义本金 = 本金 / YT价格，ROI = (JANE价值 - 本金) / 本金
 
 "use strict";
 
-// ====== 1. JANE 排放参数 ======
-const WEEKLY_ALLOC = {
-  usd3: 700000,   // Holding USD3
-  lp:   1500000,  // Pendle LP-USD3
-  yt:   2750000   // Pendle YT-USD3
-};
-
-// ====== 2. Pendle 相关常量（USD3 市场 / YT） ======
+// ====== 1. Pendle: USD3 市场 / YT 地址 ======
 const USD3_MARKET = "0xeaac9b0b4f25cc63255198a3920fcf7752509586".toLowerCase();
 const USD3_YT     = "0x8751e87931f084e5e83725110329cf7b27170f89".toLowerCase();
 
@@ -37,7 +31,7 @@ const TRY_NETWORKS = ["ethereum", "arbitrum", "base", "mantle", "berachain", "hy
 // YT 状态
 const ytState = {
   network: "ethereum",
-  expiry:  null,
+  expiry: null,
   impliedApy: NaN,
   syPriceUsd: 1
 };
@@ -46,6 +40,13 @@ const ytState = {
 let ytPrice    = 0;  // USD
 let ytLeverage = 1;  // ≈ 1 / ytPrice
 
+// ====== 2. 每种池子的 per-dollar 速率 ======
+const PER_DOLLAR_RATE = {
+  usd3: 0.01,   // USD3
+  lp:   0.014,  // LP
+  yt:   0.01    // YT（再乘杠杆）
+};
+
 // ====== 3. DOM 元素 ======
 const tgeDateInput   = document.getElementById("tge-date");
 const fdvInput       = document.getElementById("fdv");
@@ -53,7 +54,6 @@ const ttsInput       = document.getElementById("tts");
 const poolTypeInput  = document.getElementById("pool-type");
 const tvlInput       = document.getElementById("pool-tvl");
 const depositInput   = document.getElementById("my-deposit");
-const kpiTvlInput    = document.getElementById("kpi-tvl");
 
 const janePriceEl    = document.getElementById("jane-price");
 const daysToTgeEl    = document.getElementById("days-to-tge");
@@ -73,12 +73,12 @@ const megaRoiEl      = document.getElementById("mega-roi");
 const ytPriceView    = document.getElementById("yt-price-view");
 const ytLevView      = document.getElementById("yt-lev-view");
 
-// 默认 TGE 固定为 2026-01-26
+// 默认 TGE = 2026-01-26
 (function initDefaultDate() {
   if (tgeDateInput) tgeDateInput.value = "2026-01-26";
 })();
 
-// ====== 4. 小工具函数 ======
+// ====== 4. 工具函数 ======
 function parseNumber(el) {
   if (!el) return 0;
   const v = parseFloat(String(el.value || "").replace(/,/g, ""));
@@ -103,14 +103,13 @@ function formatPercent(value, decimals = 2) {
   );
 }
 
-// ====== 5. Pendle API Helper（和你 Falcon 版同一思路，精简过） ======
+// ====== 5. Pendle API Helper（简化版） ======
 const _memCache = new Map();
 const _now      = () => Date.now();
 const _key      = (kind, ident) => `${kind}:${ident}`;
 
 function cacheGet(kind, ident, ttlMs) {
   const k = _key(kind, ident);
-  // sessionStorage
   try {
     const raw = sessionStorage.getItem(k);
     if (raw) {
@@ -118,7 +117,6 @@ function cacheGet(kind, ident, ttlMs) {
       if (obj && obj.ts && _now() - obj.ts < ttlMs) return obj.data;
     }
   } catch (e) {}
-  // 内存缓存
   if (_memCache.has(k)) {
     const { ts, data } = _memCache.get(k);
     if (_now() - ts < ttlMs) return data;
@@ -170,7 +168,6 @@ async function fetchJSON(url, params = {}) {
   return r.json();
 }
 
-// 拉 assets/all，用来找到 YT 的 expiry & 所在网络
 async function getAssetsAll(networkName) {
   const key = networkName.toLowerCase();
   const cached = cacheGet("assetsAll", key, 120000);
@@ -185,9 +182,8 @@ async function getAssetsAll(networkName) {
   return cacheSet("assetsAll", key, data);
 }
 
-// 拉 market data，用 impliedApy + syPriceUsd 来推导 YT 价格
 async function getMarketData(networkName, marketAddr) {
-  const netKey = networkName.toLowerCase();
+  const netKey  = networkName.toLowerCase();
   const chainId = NETWORK_IDS[netKey];
   if (!chainId) throw new Error("Unknown network: " + networkName);
 
@@ -205,14 +201,11 @@ async function getMarketData(networkName, marketAddr) {
     try {
       const j = await fetchJSON(u);
       if (j) return cacheSet("marketData", cacheK, j);
-    } catch (e) {
-      // 尝试下一个版本
-    }
+    } catch (e) {}
   }
   return null;
 }
 
-// 解析 YT 所在网络 & 到期日
 async function resolveYtNetworkAndExpiry(ytAddr) {
   const target = (ytAddr || "").toLowerCase();
   for (const net of TRY_NETWORKS) {
@@ -235,16 +228,12 @@ async function resolveYtNetworkAndExpiry(ytAddr) {
         ytState.expiry  = hit.expiry ? parseExpiry(hit.expiry) : new Date(NaN);
         return;
       }
-    } catch (e) {
-      // ignore, try next
-    }
+    } catch (e) {}
   }
-  // fallback
   ytState.network = "ethereum";
   ytState.expiry  = new Date(NaN);
 }
 
-// 计算 USD3 YT 当前理论价格（方法和 Falcon 版 SUSDF / USDF 思路一致）
 async function updateYtPriceFromPendle() {
   try {
     await resolveYtNetworkAndExpiry(USD3_YT);
@@ -270,20 +259,19 @@ async function updateYtPriceFromPendle() {
       Number(dig(md, ["result", "syPriceUsd"])) ||
       1;
 
-    if (!(implied > 0)) implied = 0.05; // fallback 5% 年化，避免 0
-    ytState.impliedApy  = implied;
-    ytState.syPriceUsd  = syUsd;
+    if (!(implied > 0)) implied = 0.05;
+    ytState.impliedApy = implied;
+    ytState.syPriceUsd = syUsd;
 
     const now = new Date();
-    let mat   =
+    let mat =
       ytState.expiry instanceof Date && !isNaN(ytState.expiry)
         ? ytState.expiry
-        : new Date(now.getTime() + 365 * 24 * 3600 * 1000); // 默认 1 年后
+        : new Date(now.getTime() + 365 * 24 * 3600 * 1000);
 
     let yearsToMat = (mat - now) / (365 * 24 * 3600 * 1000);
     if (!isFinite(yearsToMat) || yearsToMat <= 0) yearsToMat = 0.0001;
 
-    // 贴现 PT：PT = 1 / (1+apy)^T；YT = 1 - PT
     const ptAsset = 1 / Math.pow(1 + implied, yearsToMat);
     let ytAsset   = Math.max(0, 1 - ptAsset);
     if (ytAsset < 1e-9) ytAsset = 1e-9;
@@ -303,19 +291,17 @@ async function updateYtPriceFromPendle() {
     recalc();
   } catch (e) {
     console.warn("updateYtPriceFromPendle error:", e);
-    // 拉不到就保持 ytPrice = 0 / leverage = 1，界面显示 "-"
     recalc();
   }
 }
 
-// ====== 6. 收益核心计算 ======
+// ====== 6. 核心计算 ======
 function recalc() {
   const fdv       = parseNumber(fdvInput);
   const tts       = parseNumber(ttsInput);
-  const poolType  = poolTypeInput.value;
+  const poolType  = poolTypeInput.value;  // 'usd3' | 'lp' | 'yt'
   const tvl       = parseNumber(tvlInput);
   const myDeposit = parseNumber(depositInput);
-  const kpiTvl    = parseNumber(kpiTvlInput) || 10000000;
 
   // JANE 价格
   let janePrice = 0;
@@ -326,19 +312,19 @@ function recalc() {
   // 距 TGE 天数
   let daysToTge = 0;
   if (tgeDateInput.value) {
-    const today  = new Date();
-    const tge    = new Date(tgeDateInput.value + "T00:00:00");
-    const diffMs = tge.getTime() - today.getTime();
-    daysToTge    = diffMs > 0 ? diffMs / (1000 * 60 * 60 * 24) : 0;
+    const today = new Date();
+    const tge   = new Date(tgeDateInput.value + "T00:00:00");
+    const diff  = tge.getTime() - today.getTime();
+    daysToTge   = diff > 0 ? diff / (1000 * 60 * 60 * 24) : 0;
   }
 
-  // 更新 JANE 价格 & TGE 天数显示
+  // 顶部显示
   janePriceEl.textContent =
     janePrice > 0 ? "$" + formatNumber(janePrice, 5) : "-";
   daysToTgeEl.textContent =
     daysToTge > 0 ? formatNumber(daysToTge, 1) + " days" : "0";
 
-  // 更新 YT 价格 & 杠杆显示
+  // YT 价格 & 杠杆展示
   if (ytPriceView) {
     ytPriceView.textContent =
       ytPrice > 0 ? "$" + formatNumber(ytPrice, 6) : "-";
@@ -348,10 +334,13 @@ function recalc() {
       ytPrice > 0 ? formatNumber(ytLeverage, 2) + "x" : "-";
   }
 
-  const weeklyAlloc = WEEKLY_ALLOC[poolType] || 0;
-  if (weeklyAlloc <= 0 || tvl <= 0 || myDeposit <= 0) {
+  // 当前池 per-dollar 速率
+  const perDollarRate = PER_DOLLAR_RATE[poolType] || 0.01;
+  perDollarEl.textContent =
+    formatNumber(perDollarRate, 5) + " JANE / $notional / day";
+
+  if (tvl <= 0 || myDeposit <= 0) {
     poolDailyEl.textContent = "-";
-    perDollarEl.textContent = "-";
     myJaneDayEl.textContent = "-";
     myUsdDayEl.textContent  = "-";
     apyEl.textContent       = "-";
@@ -364,29 +353,19 @@ function recalc() {
     return;
   }
 
-  // 基准日排放
-  const baseDaily = weeklyAlloc / 7;
+  // 池子的每日排放：TVL × per-dollar-rate
+  const dailyEmission = perDollarRate * tvl;
 
-  // TVL 动态 scaling：1x ~ 2.5x
-  let multiplier = tvl / kpiTvl;
-  if (multiplier < 1) multiplier = 1;
-  if (multiplier > 2.5) multiplier = 2.5;
-
-  const dailyEmission = baseDaily * multiplier;
-
-  // 每 1 美金“名义本金”每天挖多少 JANE
-  const janePerDollarNotionalPerDay = dailyEmission / tvl;
-
-  // —— 核心：YT 的名义本金 = 本金 / YT 价格 —— //
-  let effectiveNotional = myDeposit;
+  // 名义本金
+  let notional = myDeposit;
   if (poolType === "yt" && ytPrice > 0) {
-    effectiveNotional = myDeposit * ytLeverage; // = deposit / ytPrice
+    notional = myDeposit * ytLeverage; // = deposit / price
   }
+  // LP 这版不再拆 SY，直接全算（要拆再说）
 
-  const myJanePerDay = janePerDollarNotionalPerDay * effectiveNotional;
+  const myJanePerDay = perDollarRate * notional;
   const myUsdPerDay  = myJanePerDay * janePrice;
 
-  // APY：永远用真实本金做分母
   const apy =
     myUsdPerDay > 0 && myDeposit > 0
       ? (myUsdPerDay * 365 * 100) / myDeposit
@@ -395,25 +374,19 @@ function recalc() {
   const totalJaneUntilTge = myJanePerDay * daysToTge;
   const totalUsdUntilTge  = totalJaneUntilTge * janePrice;
 
-  // ROI 逻辑：
-  //  - USD3 / LP：ROI = JANE / 本金
-  //  - YT：       ROI = (JANE − 本金) / 本金 （到期 YT 归零）
   let roiPct = 0;
   if (totalUsdUntilTge > 0 && myDeposit > 0) {
-    const grossRoi = totalUsdUntilTge / myDeposit; // JANE / principal
+    const grossRoi = totalUsdUntilTge / myDeposit;
     if (poolType === "yt") {
-      roiPct = (grossRoi - 1) * 100; // 净收益率
+      roiPct = (grossRoi - 1) * 100; // YT：减本金
     } else {
-      roiPct = grossRoi * 100;
+      roiPct = grossRoi * 100;       // USD3 / LP：不减本金
     }
   }
 
   // 小卡片
   poolDailyEl.textContent =
     formatNumber(dailyEmission, 0) + " JANE / day";
-  perDollarEl.textContent =
-    formatNumber(janePerDollarNotionalPerDay, 6) +
-    " JANE / $notional / day";
   myJaneDayEl.textContent =
     formatNumber(myJanePerDay, 2) + " JANE / day";
   myUsdDayEl.textContent =
@@ -421,7 +394,7 @@ function recalc() {
   apyEl.textContent    = formatPercent(apy, 2);
   roiTgeEl.textContent = formatPercent(roiPct, 1);
 
-  // 大字版
+  // 大字块
   megaDayUsdEl.textContent   = "$" + formatNumber(myUsdPerDay, 2);
   megaTotalUsdEl.textContent = "$" + formatNumber(totalUsdUntilTge, 2);
   megaApyEl.textContent      = formatPercent(apy, 1);
@@ -435,15 +408,14 @@ function recalc() {
   ttsInput,
   poolTypeInput,
   tvlInput,
-  depositInput,
-  kpiTvlInput
+  depositInput
 ].forEach((el) => {
   if (!el) return;
   el.addEventListener("input", recalc);
   el.addEventListener("change", recalc);
 });
 
-// 点击 YT 价格，允许手动覆盖（防止 Pendle API 被墙时你还能用）
+// 点击 YT 价格 → 手动输入
 if (ytPriceView) {
   ytPriceView.style.cursor = "pointer";
   ytPriceView.title = "点击可手动输入 YT 价格（USD）";
@@ -460,6 +432,6 @@ if (ytPriceView) {
   });
 }
 
-// 第一次渲染 & 拉取 YT 价格
+// 初始计算 + 拉取 YT 价格
 recalc();
 updateYtPriceFromPendle();

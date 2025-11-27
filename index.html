@@ -1,238 +1,236 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
-<head>
-  <meta charset="UTF-8" />
-  <title>3Jane $JANE 收益计算器</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <link rel="stylesheet" href="style.css" />
-</head>
-<body>
-  <div class="app">
-    <div class="pixel-corner tl"></div>
-    <div class="pixel-corner tr"></div>
-    <div class="pixel-corner bl"></div>
-    <div class="pixel-corner br"></div>
+  <head>
+    <meta charset="UTF-8" />
+    <title>$JANE 收益计算器</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="icon" type="image/png" href="jane-logo.png" />
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <div class="app">
+      <div class="pixel-corner tl"></div>
+      <div class="pixel-corner tr"></div>
+      <div class="pixel-corner bl"></div>
+      <div class="pixel-corner br"></div>
 
-    <header class="header">
-      <div class="avatar"></div>
-      <div class="title-block">
-        <div class="title">$JANE Yield Calculator</div>
-        <div class="subtitle">3Jane Liquidity Mining • MengLayer Edition</div>
-        <div class="social">
-          <a href="https://x.com/menglayer" target="_blank" rel="noopener noreferrer">
-            X: @menglayer
-          </a>
-          <span class="dot">•</span>
-          <a href="https://t.me/menglayer" target="_blank" rel="noopener noreferrer">
-            TG: @menglayer
-          </a>
-        </div>
-      </div>
-    </header>
-
-    <div class="grid">
-      <!-- 左侧：全局参数 -->
-      <section class="panel">
-        <div class="panel-title">Global assumptions 全局参数</div>
-
-        <div class="form-row">
-          <label for="tge-date">TGE 时间</label>
-          <input id="tge-date" type="date" />
-        </div>
-
-        <div class="form-row">
-          <label for="fdv">预计 FDV（美金）</label>
-          <input
-            id="fdv"
-            type="number"
-            inputmode="decimal"
-            placeholder="250000000"
-            value="250000000"
-          />
-        </div>
-
-        <div class="form-row">
-          <label for="tts">TTS：TGE 时总代币量</label>
-          <input
-            id="tts"
-            type="number"
-            inputmode="decimal"
-            placeholder="1111111111"
-            value="1111111111"
-          />
-        </div>
-
-        <p class="hint">
-          JANE 单价 = FDV / TTS。TTS 可在 1,111,111,111 ～ 6,666,666,666 之间自由填写。
-        </p>
-
-        <div class="results-grid" style="margin-top: 6px;">
-          <div class="stat">
-            <div class="stat-label">Estimated $JANE Price</div>
-            <div id="jane-price" class="stat-value">-</div>
-            <div class="stat-sub">按当前 FDV 与 TTS 估算</div>
-          </div>
-
-          <div class="stat">
-            <div class="stat-label">Days Until TGE</div>
-            <div id="days-to-tge" class="stat-value">-</div>
-            <div class="stat-sub">从今天到 TGE 的天数</div>
+      <header class="header">
+        <div class="avatar"></div>
+        <div class="title-block">
+          <div class="title">$JANE YIELD CALCULATOR</div>
+          <div class="subtitle">3Jane Liquidity Mining · MengLayer Edition</div>
+          <div class="social">
+            <a
+              href="https://x.com/menglayer"
+              target="_blank"
+              rel="noopener noreferrer"
+              >X: @menglayer</a
+            >
+            <span class="dot">•</span>
+            <a
+              href="https://t.me/menglayer"
+              target="_blank"
+              rel="noopener noreferrer"
+              >TG: @menglayer</a
+            >
           </div>
         </div>
-      </section>
+      </header>
 
-      <!-- 右侧：池子设置 + 结果 + 大字收益 -->
-      <section class="panel">
-        <div class="panel-title">Pool setup 池子设置</div>
+      <main class="grid">
+        <!-- 左侧：全局参数 -->
+        <section class="panel">
+          <div class="panel-title">Global assumptions 全局参数</div>
 
-        <div class="form-row">
-          <label for="pool-type">池子类型</label>
-          <select id="pool-type">
-            <option value="usd3">Holding USD3</option>
-            <option value="lp">Pendle LP-USD3</option>
-            <option value="yt">Pendle YT-USD3</option>
-          </select>
-        </div>
+          <div class="form-row">
+            <label for="tge-date">TGE 时间</label>
+            <input id="tge-date" type="date" />
+          </div>
 
-        <div class="form-row">
-          <label for="pool-tvl">该池 TVL（美金）</label>
-          <input
-            id="pool-tvl"
-            type="number"
-            inputmode="decimal"
-            placeholder="37500000"
-            value="37500000"
-          />
-        </div>
+          <div class="form-row">
+            <label for="fdv">预计 FDV（美金）</label>
+            <input
+              id="fdv"
+              type="number"
+              inputmode="decimal"
+              placeholder="250000000"
+              value="250000000"
+            />
+          </div>
 
-        <p class="hint">
-          默认 TVL 37.5M，可手动修改。TVL ≤ KPI 用基准日排放；TVL &gt; KPI 按 TVL 线性放大，最多 2.5×。
-        </p>
+          <div class="form-row">
+            <label for="tts">TTS：TGE 时总代币量</label>
+            <input
+              id="tts"
+              type="number"
+              inputmode="decimal"
+              placeholder="1111111111"
+              value="1111111111"
+            />
+          </div>
 
-        <div class="form-row">
-          <label for="my-deposit">我的投入（美金）</label>
-          <input
-            id="my-deposit"
-            type="number"
-            inputmode="decimal"
-            placeholder="10000"
-            value="10000"
-          />
-        </div>
+          <p class="hint">
+            JANE 单价 = FDV / TTS。TTS 可在 1,111,111,111 ～ 6,666,666,666 之间自由填写。
+          </p>
 
-        <div class="form-row">
-          <label for="kpi-tvl">KPI TVL（默认 10,000,000）</label>
-          <input
-            id="kpi-tvl"
-            type="number"
-            inputmode="decimal"
-            placeholder="10000000"
-            value="10000000"
-          />
-        </div>
-<!-- YT 自动信息（价格 & 杠杆，只读展示） -->
-<div class="results-grid" style="margin-top: 6px;">
-  <div class="stat">
-    <div class="stat-label">YT Price (auto)</div>
-    <div id="yt-price-view" class="stat-value">-</div>
-    <div class="stat-sub">从 Pendle API 获取当前 YT 美元价格</div>
-  </div>
+          <div class="results-grid">
+            <div class="stat">
+              <div class="stat-label">Estimated $JANE Price</div>
+              <div id="jane-price" class="stat-value">-</div>
+              <div class="stat-sub">按当前 FDV 与 TTS 估算</div>
+            </div>
 
-  <div class="stat">
-    <div class="stat-label">YT Leverage (est.)</div>
-    <div id="yt-lev-view" class="stat-value">-</div>
-    <div class="stat-sub">≈ 1 / 价格，仅用于名义本金计算</div>
-  </div>
-</div>
+            <div class="stat">
+              <div class="stat-label">Days Until TGE</div>
+              <div id="days-to-tge" class="stat-value">-</div>
+              <div class="stat-sub">从今天到 TGE 的天数</div>
+            </div>
+          </div>
+        </section>
 
-        <div class="results-grid" style="margin-top: 6px;">
-          <div class="stat">
-            <div class="stat-label">Daily Emissions (Pool)</div>
-            <div id="pool-daily" class="stat-value">-</div>
-            <div class="stat-sub">
-              当前 TVL 下，该池每天排放的 $JANE 估算值
+        <!-- 右侧：池子设置 + 结果 -->
+        <section class="panel">
+          <div class="panel-title">Pool setup 池子设置</div>
+
+          <div class="form-row">
+            <label for="pool-type">池子类型</label>
+            <select id="pool-type">
+              <option value="usd3">Holding USD3</option>
+              <option value="lp">Pendle LP-USD3</option>
+              <option value="yt">Pendle YT-USD3</option>
+            </select>
+          </div>
+
+          <div class="form-row">
+            <label for="pool-tvl">该池 TVL（美金）</label>
+            <input
+              id="pool-tvl"
+              type="number"
+              inputmode="decimal"
+              placeholder="37500000"
+              value="37500000"
+            />
+          </div>
+
+          <p class="hint">
+            默认 TVL 37.5M，可手动修改。USD3 以 0.01 JANE / $ / day 为基准，LP / YT 使用你自定义的
+            per-dollar 速率。
+          </p>
+
+          <div class="form-row">
+            <label for="my-deposit">我的投入（美金）</label>
+            <input
+              id="my-deposit"
+              type="number"
+              inputmode="decimal"
+              placeholder="10000"
+              value="10000"
+            />
+          </div>
+
+          <!-- YT 价格 & 杠杆展示 -->
+          <div class="results-grid">
+            <div class="stat">
+              <div class="stat-label">YT Price (auto)</div>
+              <div id="yt-price-view" class="stat-value">-</div>
+              <div class="stat-sub">
+                从 Pendle API 获取当前 YT 美元价格（可点击手动覆写）
+              </div>
+            </div>
+
+            <div class="stat">
+              <div class="stat-label">YT Leverage (est.)</div>
+              <div id="yt-lev-view" class="stat-value">-</div>
+              <div class="stat-sub">≈ 1 / 价格，仅用于名义本金计算</div>
             </div>
           </div>
 
-          <div class="stat">
-            <div class="stat-label">$JANE per $ / day</div>
-            <div id="per-dollar" class="stat-value">-</div>
-            <div class="stat-sub">单位“名义本金”每天挖到多少 JANE</div>
-          </div>
-        </div>
+          <div class="results-grid">
+            <div class="stat">
+              <div class="stat-label">Daily Emissions (Pool)</div>
+              <div id="pool-daily" class="stat-value">-</div>
+              <div class="stat-sub">
+                当前 TVL 下，该池每天排放的 $JANE 估算值
+              </div>
+            </div>
 
-        <div class="results-grid" style="margin-top: 10px;">
-          <div class="stat">
-            <div class="stat-label">My $JANE / day</div>
-            <div id="my-jane-day" class="stat-value">-</div>
-            <div class="stat-sub">按当前投入金额对应的名义本金估算</div>
-          </div>
-
-          <div class="stat">
-            <div class="stat-label">My Yield / day (USD)</div>
-            <div id="my-usd-day" class="stat-value">-</div>
-            <div class="stat-sub">按 JANE 单价折算的每日收益</div>
-          </div>
-        </div>
-
-        <div class="results-grid" style="margin-top: 10px;">
-          <div class="stat">
-            <div class="stat-label">APY (Raw, Annualized)</div>
-            <div id="apy" class="stat-value">-</div>
-            <div class="stat-sub">
-              当前每天收益 × 365，未考虑 2026 解锁折现
+            <div class="stat">
+              <div class="stat-label">$JANE per $ / day</div>
+              <div id="per-dollar" class="stat-value">-</div>
+              <div class="stat-sub">
+                当前池子的 per-dollar JANE 排放（USD3: 0.01, LP: 0.014, YT: 0.01）
+              </div>
             </div>
           </div>
 
-          <div class="stat">
-            <div class="stat-label">ROI Until TGE</div>
-            <div id="roi-tge" class="stat-value">-</div>
-            <div class="stat-sub">
-              USD3/LP：JANE/本金；YT： (JANE − 本金) / 本金
+          <div class="results-grid">
+            <div class="stat">
+              <div class="stat-label">My $JANE / day</div>
+              <div id="my-jane-day" class="stat-value">-</div>
+              <div class="stat-sub">按当前投入金额对应的名义本金估算</div>
             </div>
-          </div>
-        </div>
 
-        <!-- 大字收益块 -->
-        <div class="mega-block">
-          <div class="mega-title">Result Highlight 收益总览</div>
-          <div class="mega-main">
-            每天收益
-            <span id="mega-day-usd">$0</span>
-          </div>
-          <div class="mega-row">
-            <div class="mega-tag">
-              TGE 前总收益：<span id="mega-total-usd">$0</span>
-            </div>
-            <div class="mega-tag">
-              APY：<span id="mega-apy">0%</span>
-            </div>
-            <div class="mega-tag">
-              ROI（到 TGE）：<span id="mega-roi">0%</span>
+            <div class="stat">
+              <div class="stat-label">My Yield / day (USD)</div>
+              <div id="my-usd-day" class="stat-value">-</div>
+              <div class="stat-sub">按 JANE 单价折算的每日收益</div>
             </div>
           </div>
-          <div class="mega-sub">
-            * 所有数值为模型估算，真实收益取决于最终 FDV、TTS、$JANE 价格以及协议运行情况。
-          </div>
-        </div>
 
-        <div class="badge-row">
-          <div class="badge accent">700k / 1500k / 2750k weekly split</div>
-          <div class="badge">TVL scaling 1×–2.5×</div>
-          <div class="badge">YT notional = 本金 / 价格</div>
-        </div>
-      </section>
+          <div class="results-grid">
+            <div class="stat">
+              <div class="stat-label">APY (Raw, Annualized)</div>
+              <div id="apy" class="stat-value">-</div>
+              <div class="stat-sub">
+                当前每天收益 × 365，未考虑 2026 解锁折现
+              </div>
+            </div>
+
+            <div class="stat">
+              <div class="stat-label">ROI Until TGE</div>
+              <div id="roi-tge" class="stat-value">-</div>
+              <div class="stat-sub">
+                USD3/LP：JANE/本金；YT：(JANE − 本金) / 本金
+              </div>
+            </div>
+          </div>
+
+          <!-- 大字收益块 -->
+          <div class="mega-block">
+            <div class="mega-title">Result Highlight 收益总览</div>
+            <div class="mega-main">
+              每天收益
+              <span id="mega-day-usd">$0</span>
+            </div>
+            <div class="mega-row">
+              <div class="mega-tag">
+                TGE 前总收益：<span id="mega-total-usd">$0</span>
+              </div>
+              <div class="mega-tag">
+                APY：<span id="mega-apy">0%</span>
+              </div>
+              <div class="mega-tag">
+                ROI（到 TGE）：<span id="mega-roi">0%</span>
+              </div>
+            </div>
+            <div class="mega-sub">
+              * 所有数值为模型估算，真实收益取决于最终 FDV、TTS、$JANE 价格以及协议运行情况。
+            </div>
+          </div>
+
+          <div class="badge-row">
+            <div class="badge accent">USD3: 0.01 JANE / $ / day</div>
+            <div class="badge">LP: 0.014 JANE / $ / day</div>
+            <div class="badge">YT: 0.01 JANE / $ / day（乘杠杆）</div>
+          </div>
+        </section>
+      </main>
+
+      <footer class="footer">
+        <span>仅为模型估算，不构成任何投资建议。</span>
+      </footer>
     </div>
 
-    <footer class="footer">
-      <span>仅为模型估算，不构成任何投资建议。</span>
-      <span>
-        Emission model:
-        <strong>per-day = base × max(1, min(2.5, TVL / KPI))</strong>
-      </span>
-    </footer>
-  </div>
-
-  <script src="app.js"></script>
-</body>
+    <script src="app.js"></script>
+  </body>
 </html>
